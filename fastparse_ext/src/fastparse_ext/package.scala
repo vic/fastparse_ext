@@ -1,0 +1,1 @@
+package object fastparse_ext extends fastparse_ext.Extensions
