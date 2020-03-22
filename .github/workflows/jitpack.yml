@@ -1,0 +1,16 @@
+name: Main workflow
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "**.md"
+  schedule:
+    - cron: "0 0 * * 5"
+
+jobs:
+  jitpack:
+    steps:
+      - name: JitPack version build
+        run: curl -I -vSL https://jitpack.io/com/github/$GITHUB_REPOSITORY/$(<VERSION).log || true

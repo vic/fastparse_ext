@@ -24,6 +24,8 @@ jobs:
       - name: Asdf install
         uses: asdf-vm/actions/install@v1.0.0
       - name: Test
-        run: ./ci test
-      - name: JitPack build
-        run: curl -L https://jitpack.io/com/github/$GITHUB_REPOSITORY/$GITHUB_SHA.log
+        run:  mill -i fastparse_ext.test
+  jitpack:
+    steps:
+      - name: JitPack commit build
+        run: curl -I -vSL https://jitpack.io/com/github/$GITHUB_REPOSITORY/$GITHUB_SHA.log || true
