@@ -26,6 +26,7 @@ jobs:
       - name: Test
         run:  mill -i fastparse_ext.test
   jitpack:
+    runs-on: ubuntu-latest
     steps:
       - name: JitPack commit build
         run: curl -I -vSL https://jitpack.io/com/github/$GITHUB_REPOSITORY/$GITHUB_SHA.log || true

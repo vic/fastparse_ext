@@ -11,6 +11,7 @@ on:
 
 jobs:
   jitpack:
+    runs-on: ubuntu-latest
     steps:
       - name: JitPack version build
         run: curl -I -vSL https://jitpack.io/com/github/$GITHUB_REPOSITORY/$(<VERSION).log || true
