@@ -3,6 +3,11 @@ package fastparse_ext
 import fastparse.{P, ParserInput, AnyChar, Index}
 
 trait Extensions {
+
+  /**
+    *
+    * @param p
+    */
   def Until[_: P](p: => P[_])(implicit whitespace: P[_] => P[Unit]): P[Unit] = {
     (!p ~ AnyChar).rep
   }
@@ -79,11 +84,25 @@ trait Extensions {
     withInputRun(inputWithinIndex(fromIndex, toIndex, run.input), p)
   }
 
-  def Within[O, I](outer: => P[O], inner: P[_] => P[I])(implicit ctx: P[_], ws: P[_] => P[Unit]) : P[(O, I)] = {
-    (Index ~ outer ~ Index).flatMap { case (fromIndex, outerOut, toIndex) =>
-      SetIndex(fromIndex) ~
-        withinIndex(fromIndex, toIndex, inner).map(innerOut => outerOut -> innerOut) ~
-        SetIndex(toIndex)
+  /**
+    *
+    * Constrains an inner parser to run only inside an outer parser range.
+    *
+    *  If outer matches, the parsing run is backtracked to outer's start position
+    *  and inner is run from there but limited to read only up to outer's end position.
+    *  When inner parser is done, the current position is set to the end of outer parser.
+    *
+    * @param outer A parser which will delimit the range for inner parser
+    * @param inner A parser that begins at outer's start position but cannot read beyond its end.
+    * @tparam O type of the outer parser output.
+    * @tparam I type of the inner parser output.
+    */
+  def Within[O, I](outer: => P[O], inner: P[_] => P[I])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[(O, I)] = {
+    (Index ~ outer ~ Index).flatMap {
+      case (fromIndex, outerOut, toIndex) =>
+        SetIndex(fromIndex) ~
+          withinIndex(fromIndex, toIndex, inner).map(innerOut => outerOut -> innerOut) ~
+          SetIndex(toIndex)
     }
   }
 
