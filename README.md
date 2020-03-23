@@ -14,7 +14,7 @@ import fastparse_ext._
 #####  Until
 
 ```scala
-Until(parser: => P[_]): P[Unit]
+def Until(parser: => P[_]): P[Unit]
 ```
 
 > Moves the index just to just before `parser` succeeds.
@@ -24,7 +24,7 @@ Until(parser: => P[_]): P[Unit]
 #####  UpTo
 
 ```scala
-UpTo[T](parser: => P[T]): P[T]
+def UpTo[T](parser: => P[T]): P[T]
 ```
 
 > Ignores anything up to `parser` success.
@@ -33,7 +33,9 @@ UpTo[T](parser: => P[T]): P[T]
 
 #####  SetIndex
 
-`SetIndex(index: Int)`
+```scala
+def SetIndex(index: Int)
+```
 
 > Moves the parsing index to a certain position.
 >
@@ -42,10 +44,15 @@ UpTo[T](parser: => P[T]): P[T]
 
 #####  Within
 
-`Within[I](outer: => P[Unit], inner: P[_] => P[I]): P[I]`
-`Within2[O,I](outer: => P[O], inner: P[_] => P[I]): P[(O, I)]`
+```scala
+def Within[I](outer: => P[Unit], inner: P[_] => P[I]): P[I]
+def Within2[O,I](outer: => P[O], inner: P[_] => P[I]): P[(O, I)]
+def NotWithin[O](outer: => P[O], inner: P[_] => P[_]): P[O]
+```
 
 > Constrains an inner parser to run only inside an outer parser range.
+>
+> Note that the inner parser must be given as a partial function.
 >
 > If outer matches, the parsing run is backtracked to outer's start position
 > and inner is run from there but limited to read only up to outer's end position.
@@ -53,7 +60,7 @@ UpTo[T](parser: => P[T]): P[T]
 >
 > The result of Whithin2 is a tuple with the result of both parsers.
 >
-> Note that the inner parser must be given as a partial function.
+> NotWithin succeeds only when inner fails inside of outer.
 
 See [tests](fastparse_ext/test/src/fastparse_ext/FastparseExtTest.scala) for runnable examples.
 

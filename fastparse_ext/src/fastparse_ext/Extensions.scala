@@ -4,11 +4,11 @@ import fastparse.{P, ParserInput, AnyChar, Index}
 
 trait Extensions {
 
-  def Until[_: P](p: => P[_])(implicit whitespace: P[_] => P[Unit]): P[Unit] = {
+  def Until[_: P](p: => P[_])(implicit ws: P[_] => P[Unit]): P[Unit] = {
     (!p ~ AnyChar).rep
   }
 
-  def UpTo[_: P, T](p: => P[T])(implicit whitespace: P[_] => P[Unit]): P[T] = {
+  def UpTo[_: P, T](p: => P[T])(implicit ws: P[_] => P[Unit]): P[T] = {
     Until(p) ~ p
   }
 
@@ -86,6 +86,10 @@ trait Extensions {
 
   def Within[I](outer: => P[Unit], inner: P[_] => P[I])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[I] = {
     Within2[Unit, I](outer, inner).map(_._2)
+  }
+
+  def NotWithin[O](p: => P[O], inner: P[_] => P[_])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[O] = {
+    Within2(p, !inner(_)).map(_._1)
   }
 
   /**
