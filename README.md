@@ -19,7 +19,7 @@ def Until(parser: => P[_]): P[Unit]
 
 > Moves the index just to just before `parser` succeeds.
 >
->  Convenience for: `(!parser ~ AnyChar).rep`
+>  Convenience for: `(!p ~ AnyChar).rep ~ &(p)`
 
 #####  UpTo
 

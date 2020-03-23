@@ -73,8 +73,7 @@ object FastparseExtTest extends TestSuite {
 
     test("NotWithin") - {
       test("succeeds only when inner is not present inside outer") - {
-        def bar[_: P]    = "bar"
-        def parser[_: P] = NotWithin(Until("baz").!, bar(_))
+        def parser[_: P] = NotWithin(Until("baz").!, Pass(_) ~ "bar")
 
         val result1 = parse("barbaz", parser(_))
         assert(!result1.isSuccess)
