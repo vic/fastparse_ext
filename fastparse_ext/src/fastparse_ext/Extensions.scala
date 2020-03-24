@@ -2,9 +2,11 @@ package fastparse_ext
 
 import fastparse._
 
+import scala.annotation.tailrec
+
 trait Extensions {
 
-  def Until[_: P](p: => P[_])(implicit ws: P[_] => P[Unit]): P[Unit] = {
+  def Until(p: => P[_])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[Unit] = {
     (!p ~ AnyChar).rep ~ &(p)
   }
 
@@ -84,8 +86,11 @@ trait Extensions {
     withInputRun(inputWithinIndex(fromIndex, toIndex, run.input), p)
   }
 
-  def Within[I](outer: => P[_], inner: P[_] => P[I])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[I] = {
-    Within2(outer, inner).map(_._2)
+  def Within[I](outer: => P[_], inner: P[_] => P[I], endAtInner: Boolean = false)(
+      implicit ctx: P[_],
+      ws: P[_] => P[Unit]
+  ): P[I] = {
+    Within2(outer, inner, endAtInner).map(_._2)
   }
 
   def NotWithin[O](p: => P[O], inner: P[_] => P[_])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[O] = {
@@ -98,19 +103,22 @@ trait Extensions {
     *
     *  If outer matches, the parsing run is backtracked to outer's start position
     *  and inner is run from there but limited to read only up to outer's end position.
-    *  When inner parser is done, the current position is set to the end of outer parser.
     *
     * @param outer A parser which will delimit the range for inner parser
     * @param inner A parser that begins at outer's start position but cannot read beyond its end.
+    * @param endAtInner If true the end position is that of inner, otherwise it will be the end position of outer.
     * @tparam O type of the outer parser output.
     * @tparam I type of the inner parser output.
     */
-  def Within2[O, I](outer: => P[O], inner: P[_] => P[I])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[(O, I)] = {
+  def Within2[O, I](outer: => P[O], inner: P[_] => P[I], endAtInner: Boolean = false)(
+      implicit ctx: P[_],
+      ws: P[_] => P[Unit]
+  ): P[(O, I)] = {
     (Index ~ outer ~ Index).flatMap {
       case (fromIndex, outerOut, toIndex) =>
         SetIndex(fromIndex) ~
           withinIndex(fromIndex, toIndex, inner).map(innerOut => outerOut -> innerOut) ~
-          SetIndex(toIndex)
+          (if (endAtInner) Pass else SetIndex(toIndex))
     }
   }
 

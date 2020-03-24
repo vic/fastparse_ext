@@ -22,6 +22,26 @@ object FastparseExtTest extends TestSuite {
         val result       = parse("AholaB", parser(_))
         assert(result == Parsed.Success("B", 6))
       }
+
+      test("does not consume if given parser is not found") - {
+        def parser[_: P] = P("A") ~ (Until("B") | "C").!
+        val result       = parse("AC", parser(_))
+        assert(result == Parsed.Success("C", 2))
+      }
+    }
+
+    test("UpTo") - {
+      test("consumes up to the given parser") - {
+        def parser[_: P] = P("A") ~ UpTo("B").!
+        val result       = parse("AholaB", parser(_))
+        assert(result == Parsed.Success("holaB", 6))
+      }
+
+      test("does not consumes if the given parser fails") - {
+        def parser[_: P] = P("A") ~ (UpTo("B") | "C").!
+        val result       = parse("AC", parser(_))
+        assert(result == Parsed.Success("C", 2))
+      }
     }
 
     test("Within") - {
@@ -68,6 +88,11 @@ object FastparseExtTest extends TestSuite {
 
         val result = parse(input, parser(_))
         assert(result.isSuccess, result.get.value == expected)
+      }
+
+      test("endAtInner=true makes end position that of inner") - {
+        def parser[_: P]           = Within(Until("B"), Pass(_) ~ "A".!, endAtInner = true)
+        val Parsed.Success("A", 1) = parse("ACDBE", parser(_))
       }
     }
 
