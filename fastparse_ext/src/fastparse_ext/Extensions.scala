@@ -2,14 +2,26 @@ package fastparse_ext
 
 import fastparse._
 
+import scala.annotation.tailrec
+
 trait Extensions {
+
+  def IsEmpty[T](p: => P[T])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[T] = {
+    (Index ~ p ~ Index).flatMap {
+      case (fromIndex, v, toIndex) if fromIndex == toIndex =>
+        ctx.freshSuccess(v)
+      case (fromIndex, _, _) =>
+        if (ctx.verboseFailures) ctx.aggregateTerminal(fromIndex, () => "IsEmpty")
+        ctx.freshFailure(fromIndex)
+    }
+  }
 
   def Until(p: => P[_])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[Unit] = {
     (!p ~ AnyChar).rep ~ &(p)
   }
 
-  def UpTo[_: P, T](p: => P[T])(implicit ws: P[_] => P[Unit]): P[T] = {
-    Until(p) ~ p
+  def UpTo[T](p: => P[T])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[T] = {
+    (!p ~ AnyChar).rep ~ p
   }
 
   def Back(implicit p: P[Any]): P[Unit] = {
@@ -91,8 +103,8 @@ trait Extensions {
     Within2(outer, inner, endAtOuter = endAtOuter).map(_._2)
   }
 
-  def NotWithin[O](p: => P[O], inner: P[_] => P[_])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[O] = {
-    Within2(p, !inner(_), endAtOuter = true).map(_._1)
+  def NotWithin[O](outer: => P[O], inner: P[_] => P[_])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[O] = {
+    Within2(outer, !inner(_), endAtOuter = true).map(_._1)
   }
 
   /**
@@ -113,10 +125,14 @@ trait Extensions {
       ws: P[_] => P[Unit]
   ): P[(O, I)] = {
     (Index ~ outer ~ Index).flatMap {
-      case (fromIndex, outerOut, toIndex) =>
+      case (fromIndex, outerOut, toIndex) if fromIndex < toIndex =>
         SetIndex(fromIndex) ~
           withinIndex(fromIndex, toIndex, inner).map(innerOut => outerOut -> innerOut) ~
           (if (endAtOuter) SetIndex(toIndex) else Pass)
+      case (fromIndex, _, _) =>
+        ctx.index = fromIndex
+        if (ctx.verboseFailures) ctx.aggregateTerminal(fromIndex, () => "Within2")
+        ctx.freshFailure(fromIndex)
     }
   }
 

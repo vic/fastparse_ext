@@ -19,7 +19,7 @@ def Until(parser: => P[_]): P[Unit]
 
 > Moves the index just to just before `parser` succeeds.
 >
->  Convenience for: `(!p ~ AnyChar).rep ~ &(p)`
+>  Convenience for: `(!parser ~ AnyChar).rep ~ &(parser)`
 
 #####  UpTo
 
@@ -29,7 +29,7 @@ def UpTo[T](parser: => P[T]): P[T]
 
 > Ignores anything up to `parser` success.
 >
-> Convenience for: `Until(parser) ~ parser`
+> Convenience for: `(!parser ~ AnyChar).rep ~ parser`
 
 #####  SetIndex
 
@@ -45,18 +45,25 @@ def SetIndex(index: Int)
 #####  Within
 
 ```scala
-def Within[I](outer: => P[Unit], inner: P[_] => P[I]): P[I]
-def Within2[O,I](outer: => P[O], inner: P[_] => P[I]): P[(O, I)]
-def NotWithin[O](outer: => P[O], inner: P[_] => P[_]): P[O]
+def Within[I](outer: => P[_], inner: P[_] => P[I], endAtOuter: Boolean = false): P[I]
+def Within2[O,I](outer: => P[O], inner: P[_] => P[I], endAtOuter: Boolean = false): P[_] => P[I]): P[(O, I)]
+def NotWithin[O](outer: => P[O], inner: P[_] => P[I]): P[_] => P[_]): P[O]
 ```
 
 > Constrains an inner parser to run only inside an outer parser range.
 >
-> Note that the inner parser must be given as a partial function.
+> *IMPORTANT NOTE*
+> 
+> Inner parser is always passed as partially applied function, because
+> it will be run with a new index-delimited input.
 >
-> If outer matches, the parsing run is backtracked to outer's start position
-> and inner is run from there but limited to read only up to outer's end position.
-> When inner parser is done, the current position is set to the end of outer parser.
+> Define your inner parser as a function `def someInner[_: P] = ...`
+> and provide it partially applied: `someInner(_)`
+>
+> If `outer` succeeds, the `inner` parser is run from outer's start position,
+> but it can never get past outer's end position.
+> By default, the end position is that of the `inner` parser, unless `endAtOuter = true` is 
+> explicitly given.
 >
 > The result of Whithin2 is a tuple with the result of both parsers.
 >
