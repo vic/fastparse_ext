@@ -70,13 +70,13 @@ object FastparseExtTest extends TestSuite {
 
         def section[_: P]: P[Section] =
           ("SECTION " ~ CharIn("0-9").!.map(Integer.parseInt(_)) ~ ws ~
-            Within(Until("SECTION" | End), words(_))).map(Section.tupled)
+            Within(Until("SECTION" | End), words(_), endAtOuter = true)).map(Section.tupled)
 
         def sections[_: P]: P[Seq[Section]] = section.rep(1)
 
         def area[_: P]: P[Area] =
           ("AREA " ~ CharIn("A-Z").! ~ ws ~
-            Within(Until("AREA" | End), sections(_))).map(Area.tupled)
+            Within(Until("AREA" | End), sections(_), endAtOuter = true)).map(Area.tupled)
 
         def parser[_: P]: P[Seq[Area]] =
           ws ~ area.rep ~ End
@@ -90,9 +90,14 @@ object FastparseExtTest extends TestSuite {
         assert(result.isSuccess, result.get.value == expected)
       }
 
-      test("endAtInner=true makes end position that of inner") - {
-        def parser[_: P]           = Within(Until("B"), Pass(_) ~ "A".!, endAtInner = true)
+      test("endAtOuter=false makes end position that of inner") - {
+        def parser[_: P]           = Within(Until("B"), Pass(_) ~ "A".!, endAtOuter = false)
         val Parsed.Success("A", 1) = parse("ACDBE", parser(_))
+      }
+
+      test("endAtOuter=true makes end position that of outer") - {
+        def parser[_: P]           = Within(Until("B"), Pass(_) ~ "A".!, endAtOuter = true)
+        val Parsed.Success("A", 3) = parse("ACDBE", parser(_))
       }
     }
 

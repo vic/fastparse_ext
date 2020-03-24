@@ -2,8 +2,6 @@ package fastparse_ext
 
 import fastparse._
 
-import scala.annotation.tailrec
-
 trait Extensions {
 
   def Until(p: => P[_])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[Unit] = {
@@ -86,15 +84,15 @@ trait Extensions {
     withInputRun(inputWithinIndex(fromIndex, toIndex, run.input), p)
   }
 
-  def Within[I](outer: => P[_], inner: P[_] => P[I], endAtInner: Boolean = false)(
+  def Within[I](outer: => P[_], inner: P[_] => P[I], endAtOuter: Boolean = false)(
       implicit ctx: P[_],
       ws: P[_] => P[Unit]
   ): P[I] = {
-    Within2(outer, inner, endAtInner).map(_._2)
+    Within2(outer, inner, endAtOuter = endAtOuter).map(_._2)
   }
 
   def NotWithin[O](p: => P[O], inner: P[_] => P[_])(implicit ctx: P[_], ws: P[_] => P[Unit]): P[O] = {
-    Within2(p, !inner(_)).map(_._1)
+    Within2(p, !inner(_), endAtOuter = true).map(_._1)
   }
 
   /**
@@ -106,11 +104,11 @@ trait Extensions {
     *
     * @param outer A parser which will delimit the range for inner parser
     * @param inner A parser that begins at outer's start position but cannot read beyond its end.
-    * @param endAtInner If true the end position is that of inner, otherwise it will be the end position of outer.
+    * @param endAtOuter If true the end position is that of outer, otherwise it will be the end position of inner.
     * @tparam O type of the outer parser output.
     * @tparam I type of the inner parser output.
     */
-  def Within2[O, I](outer: => P[O], inner: P[_] => P[I], endAtInner: Boolean = false)(
+  def Within2[O, I](outer: => P[O], inner: P[_] => P[I], endAtOuter: Boolean = false)(
       implicit ctx: P[_],
       ws: P[_] => P[Unit]
   ): P[(O, I)] = {
@@ -118,7 +116,7 @@ trait Extensions {
       case (fromIndex, outerOut, toIndex) =>
         SetIndex(fromIndex) ~
           withinIndex(fromIndex, toIndex, inner).map(innerOut => outerOut -> innerOut) ~
-          (if (endAtInner) Pass else SetIndex(toIndex))
+          (if (endAtOuter) SetIndex(toIndex) else Pass)
     }
   }
 
