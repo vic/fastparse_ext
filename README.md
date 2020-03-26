@@ -2,6 +2,7 @@
 
 ![Main workflow](https://github.com/vic/fastparse_ext/workflows/Main%20workflow/badge.svg)
 [![jitpack](https://jitpack.io/v/vic/fastparse_ext.svg)](https://jitpack.io/#vic/fastparse_ext)
+[![scaladoc](https://img.shields.io/badge/latest-scalaDoc-informational)](https://jitpack.io/com/github/vic/fastparse_ext/latest/javadoc/)
 
 Small utility extensions for fastparse.
 
