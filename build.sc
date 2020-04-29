@@ -7,9 +7,7 @@
 
 import mill._, scalalib._, publish._
 
-
 object fastparse_ext extends ScalaModule with PublishModule {
-
   def publishVersion = os.read(os.pwd / "VERSION").trim
 
   // use versions installed from .tool-versions
@@ -37,7 +35,7 @@ object fastparse_ext extends ScalaModule with PublishModule {
     )
   )
 
-  override def ivyDeps = Agg(ivy"com.lihaoyi::fastparse:2.2.2")
+  override def ivyDeps = Agg(ivy"com.lihaoyi::fastparse:2.3.0")
 
   object test extends Tests {
     def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.2")
