@@ -1,2 +1,6 @@
 out/
-.idea/
+.idea*
+.metals/
+.bloop/
+cs
+
